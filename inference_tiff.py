@@ -268,9 +268,9 @@ class GeoTIFFPredictor:
             dst.write(data, 1)
 
 if __name__ == "__main__":
-    checkpoint_path = "checkpoints/checkpoint_epoch_16_loss_0.0299.pth"
+    checkpoint_path = "checkpoints/checkpoint_epoch_23_acc_0.7401_loss_0.1409_2loss_ondecay_1e-4.pth"
     input_tif = "image/landsat2024_0 (4).tif"
-    output_tif = "image/landsat2024_0 (4)_pred.tif"
+    output_tif = "image/landsat2024_0 (8)_pred.tif"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = UNet(in_channels=6).to(device)

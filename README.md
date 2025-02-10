@@ -25,5 +25,5 @@ para instalar as dependências.
 
     mamba env create --file environment.yml
 
-> [!NOTA]
+> [!NOTE]
 > O comando acima foi testado em dispositivos Linux com GPUs CUDA.
