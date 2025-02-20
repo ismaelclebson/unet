@@ -20,3 +20,4 @@ dependencies:
     - scikit-learn
     - timm
     - vit-pytorch
+    - segmentation-models-pytorch

@@ -7,142 +7,6 @@ from pathlib import Path
 from tqdm import tqdm
 from model import UNet
 
-# class GeoTIFFPredictor:
-#     def __init__(self, model, device, window_size=256, overlap=64):
-#         self.model = model
-#         self.device = device
-#         self.window_size = window_size
-#         self.overlap = overlap
-#         self.stride = window_size - overlap
-        
-#         # Cria kernel de pesos para blend (Gaussian-like)
-#         self.blend_weights = self.create_blend_weights(window_size, overlap)
-
-#     @staticmethod
-#     def create_blend_weights(size, overlap):
-#         """Cria pesos para blend suave nas bordas"""
-#         weights = np.ones((size, size), dtype=np.float32)
-#         ramp = np.linspace(0, 1, overlap//2)
-        
-#         # Bordas horizontais
-#         weights[:overlap//2, :] *= ramp[:, np.newaxis]
-#         weights[-overlap//2:, :] *= ramp[::-1, np.newaxis]
-        
-#         # Bordas verticais
-#         weights[:, :overlap//2] *= ramp[np.newaxis, :]
-#         weights[:, -overlap//2:] *= ramp[np.newaxis, ::-1]
-        
-#         return torch.from_numpy(weights).to(device).cpu()
-
-#     def normalize_band(self, band):
-#         """Normalização individual de cada banda (igual ao dataset)"""
-#         min_val = band.min()
-#         max_val = band.max()
-#         if max_val > min_val:
-#             return (band - min_val) / (max_val - min_val)
-#         return np.zeros_like(band, dtype=np.float32)
-
-#     def predict_geotiff(self, input_path, output_path, return_probs=True):
-#         """Executa a predição completa em um arquivo GeoTIFF"""
-#         with rasterio.open(input_path) as src:
-#             # Cria matrizes para acumulação
-#             full_pred = np.zeros((src.height, src.width), dtype=np.float32)
-#             full_count = np.zeros((src.height, src.width), dtype=np.float32)
-            
-#             # Gera coordenadas das janelas
-#             offsets = []
-#             for y in range(0, src.height, self.stride):
-#                 for x in range(0, src.width, self.stride):
-#                     y_start = max(0, y)
-#                     x_start = max(0, x)
-#                     y_end = min(src.height, y_start + self.window_size)
-#                     x_end = min(src.width, x_start + self.window_size)
-#                     offsets.append((y_start, x_start, y_end, x_end))
-
-#             # Processa cada janela
-#             for y_start, x_start, y_end, x_end in tqdm(offsets, desc="Processando janelas"):
-#                 # Lê a janela
-#                 window = Window(x_start, y_start, x_end - x_start, y_end - y_start)
-#                 chip = src.read(window=window).astype(np.float32)
-                
-#                 # Normaliza cada banda
-#                 for c in range(chip.shape[0]):
-#                     chip[c] = self.normalize_band(chip[c])
-                
-#                 # Converte para tensor e move para GPU
-#                 input_tensor = torch.from_numpy(chip).unsqueeze(0).to(self.device)
-                
-#                 # Predição
-#                 with torch.no_grad():
-#                     output = self.model(input_tensor)
-#                     pred = torch.sigmoid(output).squeeze().cpu().numpy()
-                
-#                 # Aplica pesos de blend
-#                 h, w = pred.shape
-#                 weights = self.blend_weights[:h, :w]
-#                 weighted_pred = pred * weights.numpy()
-                
-#                 # Atualiza a matriz de acumulação
-#                 full_pred[y_start:y_end, x_start:x_end] += weighted_pred
-#                 full_count[y_start:y_end, x_start:x_end] += weights.numpy()
-
-#             # Calcula média ponderada
-#             full_pred = np.divide(full_pred, full_count, where=full_count>0)
-            
-#             # Binariza se necessário
-#             if not return_probs:
-#                 full_pred = (full_pred > 0.5).astype(np.uint8)
-
-#             # Salva o resultado
-#             self.save_geotiff(output_path, full_pred, src.profile, return_probs)
-
-#     def save_geotiff(self, output_path, data, profile, return_probs):
-#         """Salva o resultado mantendo a projeção original"""
-#         # Se for probabilidade, atualiza count e dtype
-#         if return_probs:
-#             profile.update({
-#                 'driver': 'GTiff',
-#                 'height': data.shape[0],
-#                 'width': data.shape[1],
-#                 'count': 1,  # A probabilidade é salva em uma única camada
-#                 'dtype': 'float32',  # Tipo de dado para probabilidade
-#                 'nodata': None,
-#                 'compress': 'lzw'
-#             })
-#         else:
-#             # Se for classe binária, muda para inteiro
-#             profile.update({
-#                 'driver': 'GTiff',
-#                 'height': data.shape[0],
-#                 'width': data.shape[1],
-#                 'count': 1,  # Uma camada para as classes binárias
-#                 'dtype': 'int8',  # Tipo de dado para classe binária
-#                 'nodata': None,
-#                 'compress': 'lzw'
-#             })
-        
-#         # Salva o arquivo com o perfil modificado
-#         with rasterio.open(output_path, 'w', **profile) as dst:
-#             dst.write(data, 1)
-
-# if __name__ == "__main__":
-#     # Configurações
-#     checkpoint_path = "checkpoints/checkpoint_epoch_16_loss_0.0299.pth"
-#     input_tif = "image/landsat2024_0 (4).tif"
-#     output_tif = "image/landsat2024_0 (4)_pred.tif"
-#     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-#     # Carrega o modelo
-#     model = UNet(in_channels=6).to(device)  # Ajustar para número correto de bandas
-#     model.load_state_dict(torch.load(checkpoint_path))
-#     model.eval()
-
-#     # Executa predição
-#     predictor = GeoTIFFPredictor(model, device, window_size=256, overlap=32)
-#     predictor.predict_geotiff(input_tif, output_tif, return_probs=True)
-
-
-
 class GeoTIFFPredictor:
     def __init__(self, model, device, window_size=256, overlap=64):
         self.model = model
@@ -268,9 +132,9 @@ class GeoTIFFPredictor:
             dst.write(data, 1)
 
 if __name__ == "__main__":
-    checkpoint_path = "checkpoints/checkpoint_epoch_23_acc_0.7401_loss_0.1409_2loss_ondecay_1e-4.pth"
+    checkpoint_path = "checkpoints/checkpoint_epoch_15_acc_0.7364_loss_0.1467.pth"
     input_tif = "image/landsat2024_0 (4).tif"
-    output_tif = "image/landsat2024_0 (8)_pred.tif"
+    output_tif = "image/landsat2024_0 (12)_pred.tif"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = UNet(in_channels=6).to(device)
