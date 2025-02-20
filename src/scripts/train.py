@@ -1,20 +1,51 @@
+"""
+Training Script for U-Net Model with Checkpointing and Validation
+
+This script trains a U-Net model for image segmentation tasks. It supports:
+- Loading datasets for training and validation.
+- Training with a custom loss function combining Focal Loss and Jaccard Loss.
+- Saving the best checkpoints based on validation loss.
+- Resuming training from the last checkpoint if interrupted.
+
+Usage:
+    Run the script to start training. Ensure the dataset paths and hyperparameters are correctly configured.
+
+Dependencies:
+    - torch
+    - torchmetrics
+    - segmentation_models_pytorch
+    - Custom modules: UNet, JointLoss, ModelCheckpoint, and dataset utilities.
+
+Hyperparameters:
+    - BATCH_SIZE: Batch size for training and validation.
+    - LEARNING_RATE: Learning rate for the optimizer.
+    - NUM_EPOCHS: Total number of training epochs.
+    - DEVICE: Device to use for training (CUDA if available, else CPU).
+    - CHECKPOINT_DIR: Directory to save model checkpoints.
+
+Example:
+    python train.py
+"""
+
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 import os
-from model import UNet
-from uniqueDataset import get_dataloaders
+from src.models.model import UNet
+from src.data.uniqueDataset import get_dataloaders
 from torchmetrics.classification import F1Score, BinaryJaccardIndex
 import segmentation_models_pytorch as smp
-from utils import JointLoss, ModelCheckpoint
+from src.scripts.utils import JointLoss, ModelCheckpoint
+
 
 # Hiperparâmetros
 BATCH_SIZE = 8
 LEARNING_RATE = 0.0001 # 0.001 (antes)
 NUM_EPOCHS = 100
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-CHECKPOINT_DIR = "checkpoints"  # Pasta para salvar os pesos
+CHECKPOINT_DIR = "src/models/checkpoints"  # Pasta para salvar os pesos
 
 # Criar pasta para checkpoints
 os.makedirs(CHECKPOINT_DIR, exist_ok=True)

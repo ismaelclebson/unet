@@ -1,7 +1,7 @@
 import torch
-from model import UNet
+from src.models.model import UNet
 import matplotlib.pyplot as plt
-from uniqueDataset import get_dataloaders
+from src.data.uniqueDataset import get_dataloaders
 
 # Carregar dados
 train_loader, val_loader = get_dataloaders(

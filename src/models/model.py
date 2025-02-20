@@ -18,20 +18,12 @@ class UNet(nn.Module):
         self.bottleneck = UNet._block(features * 8, features * 16, name="bottleneck")
 
         self.upconv4 = nn.ConvTranspose2d(features * 16, features * 8, kernel_size=2, stride=2)
-        #self.upconv4_bn = nn.BatchNorm2d(features * 8)
-        #self.upconv4_relu = nn.ReLU(inplace=True)
         self.decoder4 = UNet._block((features * 8) * 2, features * 8, name="dec4")
         self.upconv3 = nn.ConvTranspose2d(features * 8, features * 4, kernel_size=2, stride=2)
-        #self.upconv3_bn = nn.BatchNorm2d(features * 4)
-        #self.upconv3_relu = nn.ReLU(inplace=True)
         self.decoder3 = UNet._block((features * 4) * 2, features * 4, name="dec3")
         self.upconv2 = nn.ConvTranspose2d(features * 4, features * 2, kernel_size=2, stride=2)
-        #self.upconv2_bn = nn.BatchNorm2d(features * 2)
-        #self.upconv2_relu = nn.ReLU(inplace=True)
         self.decoder2 = UNet._block((features * 2) * 2, features * 2, name="dec2")
         self.upconv1 = nn.ConvTranspose2d(features * 2, features, kernel_size=2, stride=2)
-        #self.upconv1_bn = nn.BatchNorm2d(features)
-        #self.upconv1_relu = nn.ReLU(inplace=True)
         self.decoder1 = UNet._block(features * 2, features, name="dec1")
 
         self.conv = nn.Conv2d(in_channels=features, out_channels=out_channels, kernel_size=1)
@@ -45,29 +37,21 @@ class UNet(nn.Module):
         bottleneck = self.bottleneck(self.pool4(enc4))
 
         dec4 = self.upconv4(bottleneck)
-        #dec4 = self.upconv4_bn(dec4)
-        #dec4 = self.upconv4_relu(dec4)
         dec4 = torch.cat((dec4, enc4), dim=1)
         dec4 = self.decoder4(dec4)
 
         dec3 = self.upconv3(dec4)
-        #dec3 = self.upconv3_bn(dec3)
-        #dec3 = self.upconv3_relu(dec3)
         dec3 = torch.cat((dec3, enc3), dim=1)
         dec3 = self.decoder3(dec3)
 
         dec2 = self.upconv2(dec3)
-        #dec2 = self.upconv2_bn(dec2)
-        #dec2 = self.upconv2_relu(dec2)
         dec2 = torch.cat((dec2, enc2), dim=1)
         dec2 = self.decoder2(dec2)
 
         dec1 = self.upconv1(dec2)
-        #dec1 = self.upconv1_bn(dec1)
-        #dec1 = self.upconv1_relu(dec1)
         dec1 = torch.cat((dec1, enc1), dim=1)
         dec1 = self.decoder1(dec1)
-        #dec1 = nn.Dropout(0.2)(dec1)
+
 
         return self.conv(dec1)
 

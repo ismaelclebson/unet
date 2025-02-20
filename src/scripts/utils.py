@@ -1,6 +1,43 @@
+
+"""
+Utility Functions and Classes for Training U-Net Models
+
+This module provides utility functions and classes for training U-Net models, including:
+- A custom loss function combining two loss functions with adjustable weights.
+- A checkpoint callback to save the best model based on validation loss.
+
+Classes:
+    - JointLoss:
+        Combines two loss functions with customizable weights.
+        Args:
+            loss1 (nn.Module): First loss function (e.g., FocalLoss).
+            loss2 (nn.Module): Second loss function (e.g., DiceLoss).
+            weight1 (float): Weight for the first loss function.
+            weight2 (float): Weight for the second loss function.
+        Methods:
+            forward(outputs, targets): Computes the combined loss.
+
+    - ModelCheckpoint:
+        Callback to save the best model checkpoints based on validation loss.
+        Args:
+            checkpoint_dir (str): Directory to save checkpoints.
+            max_saves (int): Maximum number of checkpoints to keep.
+        Methods:
+            __call__(model, avg_val_acc, val_loss, epoch): Saves the best checkpoint.
+
+Example:
+    # Initialize JointLoss
+    joint_loss = JointLoss(loss1, loss2, weight1=0.7, weight2=0.3)
+
+    # Initialize ModelCheckpoint
+    checkpoint_callback = ModelCheckpoint(checkpoint_dir="checkpoints", max_saves=2)
+"""
+
+
 import torch.nn as nn
 import os
 import torch
+
 
 class JointLoss(nn.Module):
     def __init__(self, loss1, loss2, weight1=0.5, weight2=0.5):

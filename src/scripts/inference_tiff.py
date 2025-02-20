@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from rasterio.windows import Window
 from pathlib import Path
 from tqdm import tqdm
-from model import UNet
+from src.models.model import UNet
 
 class GeoTIFFPredictor:
     def __init__(self, model, device, window_size=256, overlap=64):

@@ -1,10 +1,11 @@
 import os
+
 import numpy as np
+
 #from sklearn.model_selection import train_test_split
 
 def resize_image_array(image_array, target_shape):
-    """
-    Ajusta o formato do array de imagem para o shape desejado.
+    """Ajusta o formato do array de imagem para o shape desejado.
 
     Args:
         image_array (np.ndarray): Array de imagem original.
@@ -14,6 +15,7 @@ def resize_image_array(image_array, target_shape):
         np.ndarray: Array ajustado.
     """
     from skimage.transform import resize
+
     resized = np.zeros(target_shape, dtype=image_array.dtype)
     for c in range(target_shape[0]):
         resized[c] = resize(
@@ -25,8 +27,7 @@ def resize_image_array(image_array, target_shape):
     return resized
 
 def resize_label_array(label_array, target_shape):
-    """
-    Ajusta o formato do array de rótulo para o shape desejado.
+    """Ajusta o formato do array de rótulo para o shape desejado.
 
     Args:
         label_array (np.ndarray): Array de rótulo original.
@@ -36,6 +37,7 @@ def resize_label_array(label_array, target_shape):
         np.ndarray: Array ajustado.
     """
     from skimage.transform import resize
+
     resized = resize(
         label_array[0],
         target_shape[1:],
@@ -45,7 +47,7 @@ def resize_label_array(label_array, target_shape):
     return resized[np.newaxis, ...]
 
 # Define o diretório raiz dos dados
-data_dir = '../../dataset_palmls4claymodel/data/raw_test'
+data_dir = '../../dataset_palmls4claymodel/data/raw_train'
 
 # Lista para armazenar os caminhos dos arquivos .npz
 npz_files = [os.path.join(data_dir, filename) for filename in os.listdir(data_dir) if filename.endswith('.npz')]
@@ -60,8 +62,7 @@ npz_files = [os.path.join(data_dir, filename) for filename in os.listdir(data_di
 #val_files, test_files = train_test_split(test_val_files, train_size=val_ratio / (val_ratio + test_ratio), random_state=42)
 
 def process_and_split_npz(filepath, output_dir, split, n_band, threshold=0.01, counters=None, proportion_counts=None):
-    """
-    Processa um arquivo .npz e salva as imagens e máscaras no formato .npy nos diretórios img e gt.
+    """Processa um arquivo .npz e salva as imagens e máscaras no formato .npy nos diretórios img e gt.
     Filtra imagens com base na representatividade do rótulo 1 e realiza contagem para diferentes limiares.
 
     Args:
@@ -75,7 +76,6 @@ def process_and_split_npz(filepath, output_dir, split, n_band, threshold=0.01, c
     """
     bands_feature = int(n_band - 1)
     band_label = 1
-
     filename = os.path.basename(filepath).split('.')[0]
 
     # Carrega os dados do arquivo .npz
@@ -83,8 +83,8 @@ def process_and_split_npz(filepath, output_dir, split, n_band, threshold=0.01, c
     image_array = data['array']
 
     # Separar a última banda como rótulo e as demais como imagem
-    class_array = image_array[-1:, :, :]  # Rótulo (1, H, W)
-    image_array = image_array[:-1, :, :]  # Imagem (C-1, H, W)
+    class_array = image_array[-1:, :, :] # Rótulo (1, H, W)
+    image_array = image_array[:-1, :, :] # Imagem (C-1, H, W)
 
     # Incrementa o contador total
     if counters is not None:
@@ -119,6 +119,7 @@ def process_and_split_npz(filepath, output_dir, split, n_band, threshold=0.01, c
     # Criar diretórios para imagens e rótulos
     img_dir = os.path.join(output_dir, split, "img")
     gt_dir = os.path.join(output_dir, split, "gt")
+
     os.makedirs(img_dir, exist_ok=True)
     os.makedirs(gt_dir, exist_ok=True)
 
@@ -128,7 +129,12 @@ def process_and_split_npz(filepath, output_dir, split, n_band, threshold=0.01, c
 
     print(f"Arquivo {filename} processado e salvo. Proporção do rótulo 1: {label_1_proportion:.2%}")
 
-
+"""
+Este script processa arquivos .npz contendo imagens de satélite e suas respectivas máscaras de segmentação.
+O script carrega os arquivos .npz, separa as imagens das máscaras, redimensiona-as para um tamanho padrão,
+filtra as imagens com base na proporção de pixels da classe 1 nas máscaras, e salva as imagens e máscaras processadas
+como arquivos .npy em diretórios separados para treino, validação e teste.
+"""
 # Adiciona contadores para rastrear estatísticas
 counters = {"total": 0, "filtered": 0}
 
@@ -143,9 +149,9 @@ for file in npz_files:
     process_and_split_npz(
         file,
         output_dir,
-        'val',
+        'train',
         7,
-        threshold=0.05,  # Ajuste conforme necessário
+        threshold=0.05, # Ajuste conforme necessário
         counters=counters,
         proportion_counts=proportion_counts,
     )
@@ -155,9 +161,6 @@ print(f"\nProcessamento concluído!")
 print(f"Total de imagens: {counters['total']}")
 print(f"Imagens após aplicação do limiar: {counters['filtered']}")
 print(f"Imagens descartadas: {counters['total'] - counters['filtered']}")
-
 print("\nContagem de imagens por limiares de proporção do rótulo 1:")
 for threshold, count in proportion_counts.items():
     print(f"- Proporção >= {threshold:.0%}: {count} imagens")
-
-

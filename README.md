@@ -27,3 +27,7 @@ para instalar as dependências.
 
 > [!NOTE]
 > O comando acima foi testado em dispositivos Linux com GPUs CUDA.
+
+Para executar o script de treinamento.
+
+    python -m src.scripts.train
